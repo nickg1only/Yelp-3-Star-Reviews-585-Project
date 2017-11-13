@@ -220,4 +220,5 @@ file = "../Yelp_dataset/review.json"
     
 nb = NaiveBayes(file, tokenizer=tokenize_review)
 nb.train_model()
+# Set pseudocount to 0.0001
 print "Accuracy of classifier:  ", nb.evaluate_classifier_accuracy(0.0001)
