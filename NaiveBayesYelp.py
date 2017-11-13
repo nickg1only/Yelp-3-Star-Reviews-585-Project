@@ -1,5 +1,6 @@
 from ParseYelpData import stream_pos_reviews, stream_neg_reviews
 
+import math
 from collections import defaultdict
 
 # Global class labels.
@@ -27,9 +28,9 @@ class NaiveBayes:
         self.vocab = set()
         self.file = file
         self.tokenize_review = tokenizer
-        # class_total_doc_counts is a dictionary that maps a class (i.e., pos/neg) to
+        # class_total_review_counts is a dictionary that maps a class (i.e., pos/neg) to
         # the number of documents in the training set of that class
-        self.class_total_doc_counts = { POS_LABEL: 0.0,
+        self.class_total_review_counts = { POS_LABEL: 0.0,
                                         NEG_LABEL: 0.0 }
 
         # class_total_word_counts is a dictionary that maps a class (i.e., pos/neg) to
@@ -51,17 +52,21 @@ class NaiveBayes:
         variable above.  It makes use of the tokenize_doc and update_model
         functions you will implement.
         """
-        
+        # Tokenize and update the model with 100 positive reviews as training set
         count = 0
-        for pos_review in stream_pos_reviews(file):
+        for pos_review in stream_pos_reviews(self.file):
             if count < 100:
                 self.tokenize_and_update_model(pos_review, POS_LABEL)
             count += 1
+            
+        # Tokenize and update the model with 100 negative reviews as training set
         count = 0
-        for neg_review in stream_neg_reviews(file):
+        for neg_review in stream_neg_reviews(self.file):
             if count < 100:
                 self.tokenize_and_update_model(neg_review, NEG_LABEL)
             count += 1
+        
+        # Report some statistics after training the model
         self.report_statistics_after_training()
 
     def report_statistics_after_training(self):
@@ -70,16 +75,14 @@ class NaiveBayes:
         """
 
         print "REPORTING CORPUS STATISTICS"
-        print "NUMBER OF DOCUMENTS IN POSITIVE CLASS:", self.class_total_doc_counts[POS_LABEL]
-        print "NUMBER OF DOCUMENTS IN NEGATIVE CLASS:", self.class_total_doc_counts[NEG_LABEL]
+        print "NUMBER OF REVIEWS IN POSITIVE CLASS:", self.class_total_review_counts[POS_LABEL]
+        print "NUMBER OF REVIEWS IN NEGATIVE CLASS:", self.class_total_review_counts[NEG_LABEL]
         print "NUMBER OF TOKENS IN POSITIVE CLASS:", self.class_total_word_counts[POS_LABEL]
         print "NUMBER OF TOKENS IN NEGATIVE CLASS:", self.class_total_word_counts[NEG_LABEL]
         print "VOCABULARY SIZE: NUMBER OF UNIQUE WORDTYPES IN TRAINING CORPUS:", len(self.vocab)
 
     def update_model(self, bow, label):
         """
-        IMPLEMENT ME!
-
         Update internal statistics given a document represented as a bag-of-words
         bow - a map from words to their counts
         label - the class of the document whose bag-of-words representation was input
@@ -97,7 +100,7 @@ class NaiveBayes:
             if (word not in self.vocab):
                 self.vocab.add(word)
             self.class_total_word_counts[label] += bow[word]
-        self.class_total_doc_counts[label] += 1
+        self.class_total_review_counts[label] += 1
         
 
     def tokenize_and_update_model(self, review, label):
@@ -121,8 +124,6 @@ class NaiveBayes:
 
     def p_word_given_label(self, word, label):
         """
-        Implement me!
-
         Returns the probability of word given label
         according to this NB model.
         """
@@ -130,8 +131,6 @@ class NaiveBayes:
 
     def p_word_given_label_and_pseudocount(self, word, label, alpha):
         """
-        Implement me!
-
         Returns the probability of word given label wrt psuedo counts.
         alpha - pseudocount parameter
         """
@@ -139,8 +138,6 @@ class NaiveBayes:
 
     def log_likelihood(self, bow, label, alpha):
         """
-        Implement me!
-
         Computes the log likelihood of a set of words give a label and pseudocount.
         bow - a bag of words (i.e., a tokenized document)
         label - either the positive or negative label
@@ -153,16 +150,12 @@ class NaiveBayes:
 
     def log_prior(self, label):
         """
-        Implement me!
-
         Returns the log prior of a document having the class 'label'.
         """
-        return math.log((float)(self.class_total_doc_counts[label])/sum(self.class_total_doc_counts.values()))
+        return math.log((float)(self.class_total_review_counts[label])/sum(self.class_total_review_counts.values()))
 
     def unnormalized_log_posterior(self, bow, label, alpha):
         """
-        Implement me!
-
         Computes the unnormalized log posterior (of doc being of class 'label').
         bow - a bag of words (i.e., a tokenized document)
         """
@@ -170,8 +163,6 @@ class NaiveBayes:
 
     def classify(self, bow, alpha):
         """
-        Implement me!
-
         Compares the unnormalized log posterior for doc for both the positive
         and negative classes and returns the either POS_LABEL or NEG_LABEL
         (depending on which resulted in the higher unnormalized log posterior)
@@ -187,16 +178,12 @@ class NaiveBayes:
 
     def likelihood_ratio(self, word, alpha):
         """
-        Implement me!
-
         Returns the ratio of P(word|pos) to P(word|neg).
         """
         return self.p_word_given_label_and_pseudocount(word, POS_LABEL, alpha)/self.p_word_given_label_and_pseudocount(word, NEG_LABEL, alpha)
 
     def evaluate_classifier_accuracy(self, alpha):
         """
-        DO NOT MODIFY THIS FUNCTION
-
         alpha - pseudocount parameter.
         This function should go through the test data, classify each instance and
         compute the accuracy of the classifier (the fraction of classifications
@@ -205,21 +192,32 @@ class NaiveBayes:
         correct = 0.0
         total = 0.0
 
-        pos_path = os.path.join(self.test_dir, POS_LABEL)
-        neg_path = os.path.join(self.test_dir, NEG_LABEL)
-        for (p, label) in [ (pos_path, POS_LABEL), (neg_path, NEG_LABEL) ]:
-            for f in os.listdir(p):
-                with open(os.path.join(p,f),'r') as doc:
-                    content = doc.read()
-                    bow = self.tokenize_doc(content)
-                    if self.classify(bow, alpha) == label:
-                        correct += 1.0
-                    total += 1.0
-        return 100 * correct / total
+        # Classify 100 positive reviews and keep track of how many results are correct
+        count = 0
+        for pos_review in stream_pos_reviews(file):
+            if count >= 100 and count < 200:
+                bow = self.tokenize_review(pos_review)
+                if self.classify(bow, alpha) == POS_LABEL:
+                    correct += 1.0
+                total += 1.0
+            count += 1
+        
+        # Classify 100 negative reviews and keep track of how many results are correct
+        count = 0
+        for neg_review in stream_neg_reviews(file):
+            if count >= 100 and count < 200:
+                bow = self.tokenize_review(neg_review)
+                if self.classify(bow, alpha) == NEG_LABEL:
+                    correct += 1.0
+                total += 1.0
+            count += 1
+            
+        return 100.0 * correct / total
 
 
 
-file = "./dataset/review.json"
+file = "../Yelp_dataset/review.json"
     
 nb = NaiveBayes(file, tokenizer=tokenize_review)
 nb.train_model()
+print "Accuracy of classifier:  ", nb.evaluate_classifier_accuracy(0.0001)

@@ -17,3 +17,8 @@ def stream_neg_reviews(filename):
     for review in stream_reviews(filename):
         if review["stars"] < 3:
             yield review["text"]
+            
+def stream_neut_reviews(filename):
+    for review in stream_reviews(filename):
+        if review["stars"] == 3:
+            yield review["text"]
