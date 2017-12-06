@@ -27,12 +27,12 @@ def custom_turney():
     review_json = "../Yelp_dataset/review.json"
     business_json = "../Yelp_dataset/business.json"
     
-    # The training set (same as test set) for positive reviews
+    # The training set for positive reviews
     pos_training_set = []
-    # The training set (same as test set) for negative reviews
+    # The training set for negative reviews
     neg_training_set = []
 
-    # Initialize positive training set (which is same as test set)
+    # Initialize positive training set
     pbar = tqdm(total = 100)
     count = 0
     for pos_review in stream_pos_reviews(review_json, business_json):
@@ -150,7 +150,7 @@ def custom_turney():
             num_neg_seeds_in_sentence = 0
             
             # Split sentence into words and parts of speech tags
-            words_in_sentence = nltk.neg_tag(sentence_without_punctuation)
+            words_in_sentence = nltk.pos_tag(sentence_without_punctuation)
             
             # List of nouns in sentence
             nouns_in_sentence = []
@@ -191,7 +191,11 @@ def custom_turney():
     return word_polarity_scores
 
 
+
+
+
 word_polarity_scores = custom_turney()
+
 # Initialize positive test set
 pos_test_set = []
 pbar4 = tqdm(total = 200)
@@ -224,4 +228,5 @@ for neg_review in stream_neg_reviews(review_json, business_json):
         pbar4.close()
         break
 
-# 
+for pos_review in pos_test_set:
+    
