@@ -186,9 +186,42 @@ def custom_turney():
     # Calculate word polarity scores
     for noun in nouns:
         if word_counts[noun] >= 500:
-            word_polarity_scores[word] = math.log((num_word_near_pos_dict[word] + alpha)*num_neg_seeds*1.0/((num_word_near_neg_dict[word] + alpha)*num_pos_seeds*1.0),2)
+            word_polarity_scores[noun] = math.log((num_noun_near_pos_dict[noun] + alpha)*num_neg_seeds*1.0/((num_noun_near_neg_dict[noun] + alpha)*num_pos_seeds*1.0),2)
     
-    accuracy = 100.0*correct/total
-    
-    print "Accuracy of Custom Turney: ", accuracy
+    return word_polarity_scores
 
+
+word_polarity_scores = custom_turney()
+# Initialize positive test set
+pos_test_set = []
+pbar4 = tqdm(total = 200)
+count = 0
+for pos_review in stream_pos_reviews(review_json, business_json):
+    if count >= 100 and count < 200:
+        pos_test_set.append(pos_review)
+        pbar4.update()
+        count += 1
+    elif count < 100:
+        pbar4.update()
+        count += 1
+    else:
+        pbar4.close()
+        break
+
+# Initialize negative test set
+neg_test_set = []
+pbar4 = tqdm(total = 200)
+count = 0
+for neg_review in stream_neg_reviews(review_json, business_json):
+    if count >= 100 and count < 200:
+        neg_test_set.append(neg_review)
+        pbar4.update()
+        count += 1
+    elif count < 100:
+        pbar4.update()
+        count += 1
+    else:
+        pbar4.close()
+        break
+
+# 
