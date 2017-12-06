@@ -1,4 +1,4 @@
-from ParseYelpData import stream_pos_reviews, stream_neg_reviews
+from ParseYelpData import stream_pos_reviews, stream_neg_reviews, stream_neut_reviews
 
 import math
 from collections import defaultdict
@@ -259,7 +259,7 @@ class NaiveBayes:
             bow = self.tokenize_review(neg_review)
             if self.classify(bow, alpha) == NEG_LABEL:
                 correct += 1.0
-                total += 1.0
+            total += 1.0
             pbar.update()
         pbar.close()
             
@@ -277,3 +277,28 @@ def train_NB_model():
 def test_NB_model():
     # Set pseudocount to 0.0001
     print "Accuracy of classifier:  ", nb.evaluate_classifier_accuracy(0.0001)
+    
+def run_NB_model():
+    examples = []
+    # Initialize pos training and test sets
+    pbar = tqdm(total = 10)
+    count = 0
+    for neut_review in stream_neut_reviews(review_json, business_json):
+        if count < 10:
+            examples.append(neut_review)
+            pbar.update()
+        else:
+            break
+        count += 1
+    pbar.close()
+
+    # Classify 5 neutral reviews (examples) and print results
+    pbar = tqdm(total = 100)
+    for neut_review in examples:
+        print neut_review
+        bow = nb.tokenize_review(neut_review)
+        print "\n\n"
+        print "Naive Bayes classification for above review: ", nb.classify(bow, 0.0001)
+        print "\n\n"
+        pbar.update()
+    pbar.close()
