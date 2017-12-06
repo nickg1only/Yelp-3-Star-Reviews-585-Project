@@ -293,7 +293,7 @@ def run_NB_model():
     pbar.close()
 
     # Classify 5 neutral reviews (examples) and print results
-    pbar = tqdm(total = 100)
+    pbar = tqdm(total = 10)
     for neut_review in examples:
         print neut_review
         bow = nb.tokenize_review(neut_review)
