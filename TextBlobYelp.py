@@ -18,7 +18,7 @@ def pattern_analyzer(review_json, business_json):
             break
         if count < 100:
             testimonial = TextBlob(pos_review)
-            if testimonial.sentiment.polarity > 0:
+            if testimonial.sentiment.polarity > 0.0:
                 correct += 1.0
             total += 1.0
         count += 1
@@ -33,7 +33,7 @@ def pattern_analyzer(review_json, business_json):
             break
         if count < 100:
             testimonial = TextBlob(neg_review)
-            if testimonial.sentiment.polarity <= 0:
+            if testimonial.sentiment.polarity <= 0.0:
                 correct += 1.0
             total += 1.0
         count += 1
