@@ -1,0 +1,1 @@
+Take a random sample of a certain number (i.e. n = 100) of samples for a business, and then compare the predicted polarized aspects with human-detected polarized aspects derived from observing the random sample of reviews.

@@ -1,5 +1,5 @@
 import math
-from ParseYelpData import stream_pos_reviews, stream_neg_reviews, initialize_sample_set
+from ParseYelpData import all_reviews_for_n_businesses
 from tqdm import tqdm
 import re
 import string
@@ -48,16 +48,9 @@ class Turney:
         
         self.pos_tags = set()
 
-
-        self.pos_training_set = [] # The training set for positive reviews
-        self.neg_training_set = [] # The training set for negative reviews
-        
         # Initialize training sets
         print "Initializing training sets"
-        # Initialize positive training set
-        initialize_sample_set(self.pos_training_set, stream_pos_reviews, jsons, 0, 100) 
-        # Initialize negative training set
-        initialize_sample_set(self.neg_training_set, stream_neg_reviews, jsons, 0, 100) 
+        self.pos_training_set, _,self.neg_training_set = polarized_reviews_for_n_businesses(jsons[0], jsons[1], 0, 2) 
         
         # Lists of positive and negative seeds
         self.polarized_seeds = {'pos':[], 'neg':[]}

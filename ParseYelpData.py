@@ -43,5 +43,46 @@ def initialize_sample_set(sample_set, stream_function, jsons, start, finish):
             pbar.close()
             break    
             
-#def reviews_by_business(jsons, business_id):
-    
+
+            
+#############################################################################
+
+            
+# Given business ID, return stream of reviews for that business
+def stream_reviews_by_business_id(review_json, business_id):
+    for line in open(review_json):
+        review = json.loads(line)
+        if business_id == review["business_id"]:
+            yield review
+
+def stream_business_ids(business_json):
+    for line in open(business_json):
+        business = json.loads(line)
+        if "Food" in business["categories"]:
+            yield business["business_id"]
+        
+# Returns all reviews for each of n businesses (from start to end)
+def all_reviews_for_n_businesses(review_json, business_json, start, end):
+    count = 0
+    reviews = dict()
+    for business_id in stream_business_ids(business_json):
+        if count >= end:
+            break
+        if count >= start and count < end:
+            if business_id not in reviews.keys():
+                reviews[business_id] = []
+            for review in stream_reviews_by_business_id(review_json, business_id):
+                reviews[business_id].append(review)
+        count += 1
+    return reviews
+
+# Returns a tuple of positive, neutral, and negative reviews for n businesses
+def polarized_reviews_for_n_businesses(review_json, business_json, start, end):
+    total_reviews = all_reviews_for_n_businesses(review_json, business_json, start, end)
+    polarized_reviews = dict()
+    for business_id in total_reviews.keys():
+        pos_reviews = [review["text"] for review in total_reviews[business_id] if review["stars"] > 3]
+        neut_reviews = [review["text"] for review in total_reviews[business_id] if review["stars"] == 3]
+        neg_reviews = [review["text"] for review in total_reviews[business_id] if review["stars"] < 3]
+        polarized_reviews[business_id] = (pos_reviews, neut_reviews, neg_reviews)
+    return polarized_reviews
