@@ -4,7 +4,8 @@ from tqdm import tqdm
 import re
 import string
 import nltk
-                      
+import operator
+from collections import defaultdict                    
 
             
             
@@ -48,6 +49,8 @@ class Turney:
         
         self.pos_tags = set()
 
+        self.n_adj = defaultdict(dict)
+
 
         self.pos_training_set = [] # The training set for positive reviews
         self.neg_training_set = [] # The training set for negative reviews
@@ -83,9 +86,16 @@ class Turney:
         
         words_and_pos_tags = nltk.pos_tag(words_in_sentence)
         
+        #temporary list for storing Nouns in a current sentence
+        tempn=[]
+        # temp list of adjectives in a sentence
+        tempj=[]
         
         # List of nouns in sentence
         nouns_in_sentence = []
+        
+        # #Dictionary storing a dictionary key is a noun, inside dictionary is a count of adjectives?
+        # n_adj=defaultdict(dict)
         
         # Parse sentence for nouns and positivity measure
         for (word, part_of_speech_tag) in words_and_pos_tags:
@@ -93,16 +103,39 @@ class Turney:
             self.pos_tags.add(part_of_speech_tag)
             
             # Update noun count (both in sentence and in total)
-            if part_of_speech_tag in ['NN', 'NNS']:
+            if part_of_speech_tag in ['NN', 'NNS','NNPS','NNP']:
+                # keeping a track of the nouns in the sentence and adding them to this list
+                if word not in tempn:
+                    tempn.extend([word])
                 if word not in self.nouns:
                     self.noun_counts[word] = 1.0
                 else:
                     self.noun_counts[word] += 1.0
                 nouns_in_sentence.append(word)
+
+            if part_of_speech_tag in ['JJ','JJR','JJS']:
+                # creating a list of all the adjectives describing the nouns
+                tempj.extend([word])
             # If seed is found, update number of (either positive or negative) seeds, both in sentence and in total
             if word in self.polarized_seeds[label]:
                 self.num_polarized_seeds[label] += 1.0
                 num_polarized_seeds_in_sentence += 1.0
+        # Adding to the dictionary of dictionary
+        for n in tempn:
+            if n not in self.n_adj.keys():
+                # add new keys
+                for j in tempj:
+                    # print ("n",n,"j",j)
+                    self.n_adj[n][j]=1.0
+
+            else:
+                # n is there but j might not be there
+                for j in tempj:
+                    if j in (self.n_adj[n]).keys():
+                        self.n_adj[n][j]+=1.0
+                    else:
+                        self.n_adj[n][j]=1.0
+            
 
         # Parse nouns in sentence
         for noun in nouns_in_sentence:
@@ -155,7 +188,12 @@ class Turney:
             pbar.update()
         pbar.close()
 
-
+    def aspectadj(self,aspect):
+        # Sorted dictionary
+        sortedn_adj= sorted((self.n_adj[aspect]).items(), key=operator.itemgetter(1))
+        print("Adjectives Used for the Aspect")
+        print("")
+        print(sortedn_adj[0:10])
         
         
 # Returns number of reviews turney categorized correctly in the test set
@@ -197,8 +235,8 @@ def top_n_polarized_nouns(turney_model, n):
 
 # Run custom turney
 
-review_json = "../Yelp_dataset/review.json"
-business_json = "../Yelp_dataset/business.json"
+review_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/review.json"
+business_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/business.json"
 jsons = (review_json, business_json)
 
 pos_lex_file = "positive-words.txt"
@@ -216,7 +254,10 @@ def train_turney():
     print "Calculating polarity scores"
     turney_model.calc_polarity_scores()
 
-    
+def aspect(aspect_adj):
+    turney_model.aspectadj(aspect_adj)
+
+
 def test_turney():
     
     print "Initializing test sets"
@@ -239,9 +280,11 @@ def test_turney():
     print "Accuracy of Custom Turney: ", 100.0*(pos_correct + neg_correct)/((len(pos_test_set) + len(neg_test_set))*1.0)
     
 def print_top_five_polarized_nouns():
-    top_five_pos_nouns, top_five_neg_nouns = top_n_polarized_nouns(turney_model, 5)
+    top_five_pos_nouns, top_five_neg_nouns = top_n_polarized_nouns(turney_model, 10)
+    print "Positive"
     print top_five_pos_nouns
     print ""
+    print "Negative"
     print top_five_neg_nouns
 
 def print_noun_polarity_scores():
