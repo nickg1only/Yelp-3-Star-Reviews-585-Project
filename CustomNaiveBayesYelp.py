@@ -41,10 +41,10 @@ class NaiveBayes:
         pbar2 = tqdm(total = 100)
         count = 0
         for pos_review in stream_pos_reviews(review_json, business_json):
-            if count < 1000:
+            if count < 10000:
                 self.pos_training_set.append(pos_review)
                 pbar.update()
-            elif count >= 1000 and count < 1100:
+            elif count >= 10000 and count < 11000:
                 self.pos_test_set.append(pos_review)
                 pbar2.update()
             else:
@@ -54,14 +54,14 @@ class NaiveBayes:
         pbar2.close()
         
         # Initialize neg training and test sets
-        pbar = tqdm(total = 1000)
-        pbar2 = tqdm(total = 100)
+        pbar = tqdm(total = 10000)
+        pbar2 = tqdm(total = 1000)
         count = 0
         for neg_review in stream_neg_reviews(review_json, business_json):
-            if count < 1000:
+            if count < 10000:
                 self.neg_training_set.append(neg_review)
                 pbar.update()
-            elif count >= 1000 and count < 1100:
+            elif count >= 10000 and count < 11000:
                 self.neg_test_set.append(neg_review)
                 pbar2.update()
             else:
@@ -266,8 +266,8 @@ class NaiveBayes:
         return 100.0 * correct / total
 
 
-review_json = "../Yelp_dataset/review.json"
-business_json = "../Yelp_dataset/business.json"
+review_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/review.json"
+business_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/business.json"
 
 nb = NaiveBayes(review_json, business_json, tokenizer=tokenize_review)
 
