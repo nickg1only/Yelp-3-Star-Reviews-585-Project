@@ -235,8 +235,10 @@ def top_n_polarized_nouns(turney_model, n):
 
 # Run custom turney
 
-review_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/review.json"
-business_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/business.json"
+#review_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/review.json"
+#business_json = "/Users/shivangisingh/Downloads/Yelp-3-Star-Reviews-585-Project-master/Yelp_dataset/business.json"
+review_json = "../Yelp_dataset/review.json"
+business_json = "../Yelp_dataset/business.json"
 jsons = (review_json, business_json)
 
 pos_lex_file = "positive-words.txt"
